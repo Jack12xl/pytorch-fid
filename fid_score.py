@@ -43,6 +43,8 @@ from torch.nn.functional import adaptive_avg_pool2d
 
 from PIL import Image
 
+import pickle
+
 try:
     from tqdm import tqdm
 except ImportError:
@@ -224,7 +226,10 @@ def _compute_statistics_of_path(path, model, batch_size, dims, cuda):
         f.close()
     else:
         path = pathlib.Path(path)
-        files = list(path.glob('*.jpg')) + list(path.glob('*.png'))
+        files = list(path.glob('*synthesized_image.jpg')) + list(path.glob('*.png'))
+
+        #files = list(path.glob('*.jpg')) + list(path.glob('*.png'))
+
         m, s = calculate_activation_statistics(files, model, batch_size,
                                                dims, cuda)
 
@@ -245,8 +250,14 @@ def calculate_fid_given_paths(paths, batch_size, cuda, dims):
 
     m1, s1 = _compute_statistics_of_path(paths[0], model, batch_size,
                                          dims, cuda)
-    m2, s2 = _compute_statistics_of_path(paths[1], model, batch_size,
-                                         dims, cuda)
+    # m2, s2 = _compute_statistics_of_path(paths[1], model, batch_size,
+    #                                      dims, cuda)
+
+    m2 = np.load('./ffhq_mu.npy')
+    s2 = np.load('./ffhq_sigma.npy')
+
+
+
     fid_value = calculate_frechet_distance(m1, s1, m2, s2)
 
     return fid_value
