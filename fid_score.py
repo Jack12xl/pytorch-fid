@@ -63,17 +63,19 @@ parser.add_argument('--dims', type=int, default=2048,
                     choices=list(InceptionV3.BLOCK_INDEX_BY_DIM),
                     help=('Dimensionality of Inception features to use. '
                           'By default, uses pool3 features'))
-parser.add_argument('-c', '--gpu', default='', type=str,
+parser.add_argument('-c', '--gpu', default='0,2', type=str,
                     help='GPU to use (leave blank for CPU only)')
+parser.add_argument('--img_size', type=int, default=512,
+                    help='resize read image size')
 
 
 def imread(filename):
     """
     Loads an image file into a (height, width, 3) uint8 ndarray.
     """
-    return np.asarray(Image.open(filename), dtype=np.uint8)[..., :3]
+    return np.asarray(Image.open(filename).resize((args.img_size,args.img_size), Image.ANTIALIAS), dtype=np.uint8)[..., :3]
 
-
+def get_activations()
 def get_activations(files, model, batch_size=50, dims=2048,
                     cuda=False, verbose=False):
     """Calculates the activations of the pool_3 layer for all images.
@@ -219,15 +221,21 @@ def calculate_activation_statistics(files, model, batch_size=50,
     return mu, sigma
 
 
-def _compute_statistics_of_path(path, model, batch_size, dims, cuda):
+def _compute_statistics_of_path(path, model, batch_size, dims, cuda, type='ffhq'):
     if path.endswith('.npz'):
         f = np.load(path)
         m, s = f['mu'][:], f['sigma'][:]
         f.close()
     else:
         path = pathlib.Path(path)
-        files = list(path.glob('*synthesized_image.jpg')) + list(path.glob('*.png'))
-
+        files = list([])
+        if (type == 'ffhq'):
+        
+          files = list(path.rglob('*.png'))
+        elif(type == 'celebMask'):
+          files = list(path.rglob('*.jpg'))
+        else:
+          files = list(path.glob('*synthesized_image.jpg')) + list(path.glob('*.png'))
         #files = list(path.glob('*.jpg')) + list(path.glob('*.png'))
 
         m, s = calculate_activation_statistics(files, model, batch_size,
@@ -247,14 +255,16 @@ def calculate_fid_given_paths(paths, batch_size, cuda, dims):
     model = InceptionV3([block_idx])
     if cuda:
         model.cuda()
-
+    m2 = np.load('./ffhq_mu512.npy')
+    s2 = np.load('./ffhq_sigme512.npy')
     m1, s1 = _compute_statistics_of_path(paths[0], model, batch_size,
-                                         dims, cuda)
-    # m2, s2 = _compute_statistics_of_path(paths[1], model, batch_size,
-    #                                      dims, cuda)
+                                         dims, cuda, 'generated')
+    #m2, s2 = _compute_statistics_of_path(paths[1], model, batch_size, dims, cuda, 'celebMask')
 
-    m2 = np.load('./ffhq_mu.npy')
-    s2 = np.load('./ffhq_sigma.npy')
+    #np.save('./celebMask_mu512.npy', m2)
+    #np.save('./celebMask_sigme512.npy', s2)
+    
+    
 
 
 
@@ -264,7 +274,9 @@ def calculate_fid_given_paths(paths, batch_size, cuda, dims):
 
 
 if __name__ == '__main__':
+    global args
     args = parser.parse_args()
+    
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
     fid_value = calculate_fid_given_paths(args.path,
