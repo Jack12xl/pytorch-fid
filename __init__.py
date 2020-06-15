@@ -1,3 +1,3 @@
 from .FidSolver import FidSolver
-import fid_score
-import inception
+from . import fid_score
+from . import inception

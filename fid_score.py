@@ -51,13 +51,13 @@ except ImportError:
     # If not tqdm is not available, provide a mock version of it
     def tqdm(x): return x
 
-from inception import InceptionV3
+from .inception import InceptionV3
 
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument('path', type=str, nargs=2,
                     help=('Path to the generated images or '
                           'to .npz statistic files'))
-parser.add_argument('--batch-size', type=int, default=50,
+parser.add_argument('--batch-size', type=int, default=1,
                     help='Batch size to use')
 parser.add_argument('--dims', type=int, default=2048,
                     choices=list(InceptionV3.BLOCK_INDEX_BY_DIM),
@@ -75,7 +75,6 @@ def imread(filename):
     """
     return np.asarray(Image.open(filename).resize((args.img_size,args.img_size), Image.ANTIALIAS), dtype=np.uint8)[..., :3]
 
-def get_activations()
 def get_activations(files, model, batch_size=50, dims=2048,
                     cuda=False, verbose=False):
     """Calculates the activations of the pool_3 layer for all images.
@@ -123,7 +122,8 @@ def get_activations(files, model, batch_size=50, dims=2048,
         batch = torch.from_numpy(images).type(torch.FloatTensor)
         if cuda:
             batch = batch.cuda()
-
+        
+        print(batch.shape)
         pred = model(batch)[0]
 
         # If model output is not scalar, apply global spatial average pooling.
