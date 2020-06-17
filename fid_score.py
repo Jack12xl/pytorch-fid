@@ -192,6 +192,13 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
 
     tr_covmean = np.trace(covmean)
 
+
+    print("m1: {}".format(mu1))
+    print("m2: {}".format(mu2))
+
+    print("s1: {}".format(sigma1))
+    print("s2: {}".format(sigma2))
+
     return (diff.dot(diff) + np.trace(sigma1) +
             np.trace(sigma2) - 2 * tr_covmean)
 

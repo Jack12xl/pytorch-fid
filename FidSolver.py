@@ -47,14 +47,15 @@ class FidSolver():
 
     def set_arr(self, length):
         self.pred_arr = np.empty((length, self.dims))
-
+        self.model.eval()
+        
     def cal_frechet_distance(self, mu1, sigma1, mu2, sigma2, eps=1e-6):
         return calculate_frechet_distance(mu1, sigma1, mu2, sigma2)
 
     def cal_get_pred(self, idx, _in):
         
         _in = _in.clone()
-        #print("Before: {}".format(_in))
+        # print("Before: {}".format(_in.shape))
         norm_range(_in, [-1, 1])
         #print("after normalization: {}".format(_in) )
         pred = self.model(_in)[0]
@@ -68,8 +69,12 @@ class FidSolver():
         start = idx
         end = idx + self.batch
         
-        #print('pred size: {}'.format(pred.cpu().data.numpy().reshape(pred.size(0), -1).shape))
-        self.pred_arr[start:end] = pred.cpu().data.numpy().reshape(pred.size(0), -1)
+
+        t = pred.cpu().data.numpy().reshape(pred.size(0), -1)
+
+        # print('pred arr size: '.format(self.pred_arr[start:end]))
+        # print('res size: {}'.format(t))
+        self.pred_arr[start:end] = t
 
 
     def get_frechet(self):
